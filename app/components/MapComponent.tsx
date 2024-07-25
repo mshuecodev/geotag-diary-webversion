@@ -1,9 +1,13 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import "leaflet/dist/leaflet.css"
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.webpack.css"
 import "leaflet-defaulticon-compatibility"
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css"
+import "leaflet-routing-machine"
+
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import L, { LatLngExpression, marker } from "leaflet"
 
 import { useWindowDimensions } from "@/app/hooks/useWindowDimensions"
 
@@ -41,6 +45,21 @@ const MapComponent: React.FC = () => {
 		return null
 	}
 
+	const AddRoutingControl = () => {
+		const map = useMap()
+		useEffect(() => {
+			if (markers.length > 1) {
+				const waypoints = markers.map((marker) => L.latLng(marker.position[0], marker.position[1]))
+				L.Routing.control({
+					waypoints: waypoints,
+					routeWhileDragging: true
+				}).addTo(map)
+			}
+		}, [markers, map])
+		return null
+	}
+
+	// useeffect get current location
 	useEffect(() => {
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(
@@ -60,11 +79,9 @@ const MapComponent: React.FC = () => {
 
 	return (
 		<MapContainer
-			// center={position}
-			center={{ lat: 51.505, lng: -0.09 }}
+			center={position as LatLngExpression}
 			minZoom={0}
 			scrollWheelZoom={true}
-			// style={{ height: "400px", width: "600px" }}
 			style={{ height: "100vh", width: width }}
 		>
 			<TileLayer
@@ -86,6 +103,7 @@ const MapComponent: React.FC = () => {
 			/>
 
 			<AddMarkerOnclick />
+			<AddRoutingControl />
 			<SetViewOnClick coords={position} />
 		</MapContainer>
 	)
