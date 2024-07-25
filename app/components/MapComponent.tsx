@@ -15,24 +15,30 @@ const SetViewOnClick = ({ coords }: { coords: [number, number] }) => {
 	return null
 }
 
+const LocationMarker = ({ position, name }: { position: [number, number]; name: string }) => {
+	return (
+		<Marker position={position}>
+			<Popup>{name}</Popup>
+		</Marker>
+	)
+}
+
 const MapComponent: React.FC = () => {
 	const { width, height } = useWindowDimensions()
 
+	const [markers, setMarkers] = useState<{ position: [number, number]; name: string }[]>([])
 	const [position, setPosition] = useState<[number, number]>([51.505, -0.09])
 
-	const LocationMarker = () => {
-		const map = useMapEvents({
-			locationfound(e) {
-				setPosition([e.latlng.lat, e.latlng.lng])
-				map.flyTo(e.latlng, map.getZoom())
+	const AddMarkerOnclick = () => {
+		useMapEvents({
+			click(e) {
+				const tagName = prompt("Enter tag name for this marker:")
+				if (tagName) {
+					setMarkers((prevMarkers) => [...prevMarkers, { position: [e.latlng.lat, e.latlng.lng], name: tagName }])
+				}
 			}
 		})
-
-		return position === null ? null : (
-			<Marker position={position}>
-				<Popup>You are here now!</Popup>
-			</Marker>
-		)
+		return null
 	}
 
 	useEffect(() => {
@@ -66,7 +72,20 @@ const MapComponent: React.FC = () => {
 				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 			/>
 
-			<LocationMarker />
+			{markers.map((marker, index) => (
+				<LocationMarker
+					key={index}
+					position={marker.position}
+					name={marker.name}
+				/>
+			))}
+
+			<LocationMarker
+				position={position}
+				name={"You are here now!"}
+			/>
+
+			<AddMarkerOnclick />
 			<SetViewOnClick coords={position} />
 		</MapContainer>
 	)
